@@ -79,6 +79,8 @@ def infer_status(
     target_date: date,
     override: ManualOverride | None,
     evidence: list[InferenceEvidence],
+    has_calendar_coverage: bool = False,
+    calendar_sources: list[Source] | None = None,
 ) -> InferenceDecision:
     if override:
         return override_as_decision(override)
@@ -148,6 +150,34 @@ def infer_status(
             evidence=[build_evidence_item(best)],
             conflicting_evidence=[],
             rationale=[{"rule": "recent_announcement"}],
+        )
+
+    if has_calendar_coverage and calendar_sources and target_date.weekday() < 5:
+        score = 0.68
+        source = calendar_sources[0]
+        return InferenceDecision(
+            status="in_school",
+            confidence_score=score,
+            confidence_level=confidence_level(score),
+            explanation=f"{source.title or 'An official district calendar'} was checked and no district-wide closure or schedule-change event matched the target date.",
+            evidence=[
+                {
+                    "type": "calendar_checked",
+                    "label": "No closure match found",
+                    "matched": False,
+                    "source_id": source.id,
+                    "source_url": source.url,
+                    "source_title": source.title,
+                    "snippet": "Official calendar source reviewed with no district-wide closure on the target date.",
+                    "start_date": target_date,
+                    "end_date": target_date,
+                    "parser_interpretation": "in_school_by_calendar_absence",
+                    "freshness": source.last_fetched_at,
+                    "weight": score,
+                }
+            ],
+            conflicting_evidence=[],
+            rationale=[{"rule": "official_calendar_checked_no_matching_closure"}],
         )
 
     if target_date.weekday() < 5:

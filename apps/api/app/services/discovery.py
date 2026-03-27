@@ -97,6 +97,26 @@ def discover_sources(homepage_url: str, html: str, max_candidates: int = 12) -> 
                 discovered_from_url=homepage_url,
             )
         )
+    heuristic_paths = [
+        "/calendar",
+        "/calendar/",
+        "/parentsfamilies/calendar",
+        "/page/calendars",
+        "/departments/calendar",
+        "/documents/district/calendar",
+    ]
+    for path in heuristic_paths:
+        href = urljoin(homepage_url, path)
+        score = rank_candidate("district calendar", href, 0) + 1.0
+        candidates.append(
+            CandidateSource(
+                url=href,
+                title="District Calendar",
+                source_type=guess_source_type("district calendar", href),
+                rank_score=score,
+                discovered_from_url=homepage_url,
+            )
+        )
     deduped: dict[str, CandidateSource] = {}
     for candidate in sorted(candidates, key=lambda item: item.rank_score, reverse=True):
         deduped.setdefault(candidate.url, candidate)

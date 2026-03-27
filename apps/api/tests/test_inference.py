@@ -65,3 +65,10 @@ def test_conflicting_calendar_evidence_returns_unclear():
     decision = infer_status(date(2026, 3, 27), None, [item for item in [first, second] if item])
     assert decision.status == "unclear"
 
+
+def test_official_calendar_presence_can_support_in_school_when_no_closure_matches():
+    source = make_source("calendar_page")
+    document = make_document()
+    decision = infer_status(date(2026, 3, 27), None, [], has_calendar_coverage=True, calendar_sources=[source])
+    assert decision.status == "in_school"
+    assert decision.confidence_level == "medium"

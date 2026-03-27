@@ -252,7 +252,14 @@ def _build_fresh_result(db: Session, district: District, target_date: date) -> C
             if classified:
                 evidence.append(classified)
 
-    decision = infer_status(target_date, None, evidence)
+    calendar_sources = [source for source in sources if source.source_type in {"calendar_page", "pdf_calendar"}]
+    decision = infer_status(
+        target_date,
+        None,
+        evidence,
+        has_calendar_coverage=bool(calendar_sources),
+        calendar_sources=calendar_sources,
+    )
     result = InferenceResult(
         district_id=district.id,
         target_date=target_date,
