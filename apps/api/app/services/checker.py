@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -22,6 +22,12 @@ from app.services.inference import cache_expiration_for, classify_evidence, infe
 from app.services.normalizer import normalize_event
 from app.services.parser import ParsedOutput, parse_html_document, parse_pdf_document
 from app.services.url_safety import UnsafeURLError, canonical_domain, normalize_url
+
+
+def _as_utc(dt: datetime | None) -> datetime | None:
+    if dt is None:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def get_or_create_district(db: Session, district_url: str) -> District:
@@ -142,13 +148,13 @@ def _to_source_summary(source: Source) -> SourceSummary:
         title=source.title,
         url=source.url,
         source_type=source.source_type,
-        freshness=source.last_fetched_at,
+        freshness=_as_utc(source.last_fetched_at),
         rank_score=source.rank_score,
     )
 
 
 def _find_active_override(db: Session, district_id: str, target_date: date) -> ManualOverride | None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     overrides = db.scalars(
         select(ManualOverride).where(
             ManualOverride.district_id == district_id,
@@ -156,13 +162,14 @@ def _find_active_override(db: Session, district_id: str, target_date: date) -> M
         )
     ).all()
     for override in overrides:
-        if override.expires_at is None or override.expires_at >= now:
+        expires_at = _as_utc(override.expires_at)
+        if expires_at is None or expires_at >= now:
             return override
     return None
 
 
 def _get_cached_result(db: Session, district_id: str, target_date: date) -> InferenceResult | None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     return db.scalar(
         select(InferenceResult)
         .where(
@@ -186,7 +193,7 @@ def _result_to_response(db: Session, district: District, result: InferenceResult
         sources=[_to_source_summary(source) for source in sources[:6]],
         evidence=[EvidenceItem(**item) for item in result.evidence_json],
         result_type=result_type,
-        last_checked=result.generated_at,
+        last_checked=_as_utc(result.generated_at) or datetime.now(timezone.utc),
     )
 
 
@@ -217,7 +224,7 @@ def _build_fresh_result(db: Session, district: District, target_date: date) -> C
             evidence_json=decision.evidence,
             conflicting_evidence_json=decision.conflicting_evidence,
             rationale_json=decision.rationale,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc).replace(tzinfo=None),
             cache_expires_at=cache_expiration_for(target_date),
         )
         db.add(result)
@@ -270,7 +277,7 @@ def _build_fresh_result(db: Session, district: District, target_date: date) -> C
         evidence_json=decision.evidence,
         conflicting_evidence_json=decision.conflicting_evidence,
         rationale_json=decision.rationale,
-        generated_at=datetime.utcnow(),
+        generated_at=datetime.now(timezone.utc).replace(tzinfo=None),
         cache_expires_at=cache_expiration_for(target_date),
     )
     db.add(result)
@@ -295,7 +302,7 @@ def get_cached_or_fresh_result(db: Session, payload: CheckRequest) -> CheckRespo
             evidence_json=decision.evidence,
             conflicting_evidence_json=decision.conflicting_evidence,
             rationale_json=decision.rationale,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc).replace(tzinfo=None),
             cache_expires_at=cache_expiration_for(target_date),
         )
         db.add(result)
@@ -306,6 +313,12 @@ def get_cached_or_fresh_result(db: Session, payload: CheckRequest) -> CheckRespo
         cached = _get_cached_result(db, district.id, target_date)
         if cached:
             return _result_to_response(db, district, cached, "inferred")
+    sources = db.scalars(select(Source).where(Source.district_id == district.id)).all()
+    if payload.force_refresh or not sources:
+        try:
+            run_discovery(db, district.homepage_url)
+        except Exception:
+            pass
     return _build_fresh_result(db, district, target_date)
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from app.models import EventCandidate, ManualOverride, ParsedDocument, Source
 
@@ -59,6 +59,8 @@ def override_as_decision(override: ManualOverride) -> InferenceDecision:
 
 
 def build_evidence_item(candidate: InferenceEvidence, matched: bool = True) -> dict:
+    freshness = candidate.source.last_fetched_at
+    freshness_value = (freshness if freshness and freshness.tzinfo else freshness.replace(tzinfo=timezone.utc)) if freshness else None
     return {
         "type": candidate.evidence_type,
         "label": candidate.event.label_raw,
@@ -70,7 +72,7 @@ def build_evidence_item(candidate: InferenceEvidence, matched: bool = True) -> d
         "start_date": candidate.event.start_date.isoformat() if candidate.event.start_date else None,
         "end_date": candidate.event.end_date.isoformat() if candidate.event.end_date else None,
         "parser_interpretation": candidate.event.status_effect,
-        "freshness": candidate.source.last_fetched_at.isoformat() if candidate.source.last_fetched_at else None,
+        "freshness": freshness_value.isoformat() if freshness_value else None,
         "weight": candidate.weight,
     }
 
@@ -172,7 +174,7 @@ def infer_status(
                     "start_date": target_date.isoformat(),
                     "end_date": target_date.isoformat(),
                     "parser_interpretation": "in_school_by_calendar_absence",
-                    "freshness": source.last_fetched_at.isoformat() if source.last_fetched_at else None,
+                    "freshness": ((source.last_fetched_at if source.last_fetched_at and source.last_fetched_at.tzinfo else source.last_fetched_at.replace(tzinfo=timezone.utc)) if source.last_fetched_at else None).isoformat() if source.last_fetched_at else None,
                     "weight": score,
                 }
             ],
@@ -228,7 +230,7 @@ def classify_evidence(source: Source, parsed_document: ParsedDocument, event: Ev
 
 
 def cache_expiration_for(target_date: date) -> datetime:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     if target_date == now.date():
         return now + timedelta(hours=1)
     return now + timedelta(hours=24)
