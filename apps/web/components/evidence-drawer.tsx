@@ -6,14 +6,14 @@ export function EvidenceDrawer({ result }: { result: CheckResponse }) {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Evidence</h2>
-          <p className="text-sm text-slate-600">Every result is linked to the source material used to produce it.</p>
+          <p className="text-sm text-slate-600">Receipts, not vibes.</p>
         </div>
       </div>
 
       <div className="space-y-4">
         {result.evidence.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm text-slate-600">
-            No direct evidence items were stored for this result. This usually means the result came from a fallback or an override.
+            No direct evidence items were stored for this result. Usually that means the app had to fall back, which is another way of saying the district made this annoyingly hard.
           </div>
         ) : (
           result.evidence.map((item, index) => (
@@ -59,4 +59,3 @@ export function EvidenceDrawer({ result }: { result: CheckResponse }) {
     </section>
   );
 }
-
