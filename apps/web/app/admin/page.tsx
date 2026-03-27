@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [results, setResults] = useState<AdminResultSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshingDistrictId, setRefreshingDistrictId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +42,30 @@ export default function AdminPage() {
       cancelled = true;
     };
   }, []);
+
+  async function refreshDistrict(districtId: string) {
+    setRefreshingDistrictId(districtId);
+    setError(null);
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/admin/reparse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ district_id: districtId }),
+      });
+      if (!response.ok) {
+        throw new Error(`Refresh failed with ${response.status}`);
+      }
+      const resultsResponse = await fetch(`${apiBaseUrl}/api/admin/results`);
+      if (!resultsResponse.ok) {
+        throw new Error(`Reload failed with ${resultsResponse.status}`);
+      }
+      setResults((await resultsResponse.json()) as AdminResultSummary[]);
+    } catch (refreshError) {
+      setError(refreshError instanceof Error ? refreshError.message : "Unknown error");
+    } finally {
+      setRefreshingDistrictId(null);
+    }
+  }
 
   return (
     <main className="grid gap-6">
@@ -75,6 +100,14 @@ export default function AdminPage() {
                   <div className="text-sm text-slate-600">
                     <p>Target date: {result.target_date}</p>
                     <p>Generated: {new Date(result.generated_at).toLocaleString()}</p>
+                    <button
+                      className="mt-3 rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
+                      disabled={refreshingDistrictId === result.district_id}
+                      onClick={() => refreshDistrict(result.district_id)}
+                      type="button"
+                    >
+                      {refreshingDistrictId === result.district_id ? "Refreshing..." : "Refresh district"}
+                    </button>
                   </div>
                 </div>
               </article>

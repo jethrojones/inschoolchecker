@@ -3,6 +3,12 @@ import { CheckResponse } from "@inschoolchecker/shared-types";
 import { StatusBadge } from "./status-badge";
 
 export function ResultCard({ result }: { result: CheckResponse }) {
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZoneName: "short",
+  });
+
   return (
     <section className="paper rounded-[2rem] p-6">
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
@@ -24,7 +30,7 @@ export function ResultCard({ result }: { result: CheckResponse }) {
           </div>
           <div>
             <dt className="text-slate-500">Last checked</dt>
-            <dd className="font-medium">{new Date(result.last_checked).toLocaleString()}</dd>
+            <dd className="font-medium">{formatter.format(new Date(result.last_checked))}</dd>
           </div>
           <div>
             <dt className="text-slate-500">Domain</dt>
@@ -35,4 +41,3 @@ export function ResultCard({ result }: { result: CheckResponse }) {
     </section>
   );
 }
-

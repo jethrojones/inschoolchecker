@@ -29,3 +29,19 @@ def test_pdf_parser_extracts_text_using_reader():
     assert parsed.parse_method == "pdf_text"
     assert parsed.events[0].label_raw == "No School"
 
+
+def test_html_parser_strips_docaccess_boilerplate():
+    html = """
+    <html>
+      <body>
+        <p>This document has been archived per Title II of the Americans with Disabilities Act (28 CFR § 35.200).</p>
+        <p>DocAccess Logo</p>
+        <p>Your Documents — Transcribed, Searchable, Translated & Assisted — Instantly Accessible</p>
+        <p>Spring Break March 27-28, 2026</p>
+      </body>
+    </html>
+    """
+    parsed = parse_html_document(html)
+    assert "DocAccess Logo" not in parsed.extracted_text
+    assert "Title II of the Americans with Disabilities Act" not in parsed.extracted_text
+    assert parsed.events[0].label_raw == "Spring Break"

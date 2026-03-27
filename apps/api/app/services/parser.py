@@ -15,6 +15,12 @@ DATE_LINE_RE = re.compile(
     re.IGNORECASE,
 )
 SCHOOL_YEAR_RE = re.compile(r"(20\d{2}\s*[-/]\s*20\d{2})")
+DOCACCESS_NOISE_PATTERNS = (
+    "This document has been archived per Title II of the Americans with Disabilities Act",
+    "DocAccess Logo",
+    "Your Documents",
+    "Powered by AI. By using this app, you agree to the Terms and Privacy Policy.",
+)
 
 
 @dataclass
@@ -82,7 +88,11 @@ def parse_html_document(html: str) -> ParsedOutput:
     soup = BeautifulSoup(html, "lxml")
     title = soup.title.get_text(" ", strip=True) if soup.title else None
     headings = [node.get_text(" ", strip=True) for node in soup.find_all(["h1", "h2", "h3"])]
-    body_text = soup.get_text("\n", strip=True)
+    lines = [line.strip() for line in soup.get_text("\n", strip=True).splitlines() if line.strip()]
+    filtered_lines = [
+        line for line in lines if not any(pattern in line for pattern in DOCACCESS_NOISE_PATTERNS)
+    ]
+    body_text = "\n".join(filtered_lines)
     school_year = SCHOOL_YEAR_RE.search(body_text)
     events = extract_events_from_text(body_text)
     return ParsedOutput(

@@ -59,3 +59,9 @@ def test_cors_preflight_allows_frontend_origin(client):
     )
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "https://jethrojones.github.io"
+
+
+def test_reparse_endpoint_accepts_district_id(client, seeded_district):
+    response = client.post("/api/admin/reparse", json={"district_id": seeded_district.id})
+    assert response.status_code == 200
+    assert "reparsed_sources" in response.json()
