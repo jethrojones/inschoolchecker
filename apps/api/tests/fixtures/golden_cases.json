@@ -1,0 +1,32 @@
+[
+  {
+    "name": "regular_school_day",
+    "target_date": "2026-03-30",
+    "expected_status": "unclear"
+  },
+  {
+    "name": "district_holiday",
+    "target_date": "2026-11-26",
+    "expected_status": "out_of_school"
+  },
+  {
+    "name": "break",
+    "target_date": "2026-03-27",
+    "expected_status": "out_of_school"
+  },
+  {
+    "name": "delayed_start",
+    "target_date": "2026-01-12",
+    "expected_status": "delayed_or_modified"
+  },
+  {
+    "name": "same_day_closure",
+    "target_date": "2026-02-04",
+    "expected_status": "out_of_school"
+  },
+  {
+    "name": "conflicting_evidence",
+    "target_date": "2026-04-15",
+    "expected_status": "unclear"
+  }
+]

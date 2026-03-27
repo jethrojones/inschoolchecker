@@ -1,0 +1,13 @@
+.next
+.pytest_cache
+.venv
+__pycache__/
+*.pyc
+node_modules/
+dist/
+coverage/
+.env
+apps/api/.pytest_cache
+apps/api/data/
+apps/web/.next/
+
