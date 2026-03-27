@@ -67,10 +67,10 @@ def build_evidence_item(candidate: InferenceEvidence, matched: bool = True) -> d
         "source_url": candidate.source.url,
         "source_title": candidate.source.title,
         "snippet": candidate.event.raw_text[:280],
-        "start_date": candidate.event.start_date,
-        "end_date": candidate.event.end_date,
+        "start_date": candidate.event.start_date.isoformat() if candidate.event.start_date else None,
+        "end_date": candidate.event.end_date.isoformat() if candidate.event.end_date else None,
         "parser_interpretation": candidate.event.status_effect,
-        "freshness": candidate.source.last_fetched_at,
+        "freshness": candidate.source.last_fetched_at.isoformat() if candidate.source.last_fetched_at else None,
         "weight": candidate.weight,
     }
 
@@ -169,10 +169,10 @@ def infer_status(
                     "source_url": source.url,
                     "source_title": source.title,
                     "snippet": "Official calendar source reviewed with no district-wide closure on the target date.",
-                    "start_date": target_date,
-                    "end_date": target_date,
+                    "start_date": target_date.isoformat(),
+                    "end_date": target_date.isoformat(),
                     "parser_interpretation": "in_school_by_calendar_absence",
-                    "freshness": source.last_fetched_at,
+                    "freshness": source.last_fetched_at.isoformat() if source.last_fetched_at else None,
                     "weight": score,
                 }
             ],

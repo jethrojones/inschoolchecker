@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models import District, EventCandidate, InferenceResult, ManualOverride, ParsedDocument, Source
@@ -302,9 +302,10 @@ def get_cached_or_fresh_result(db: Session, payload: CheckRequest) -> CheckRespo
         db.commit()
         db.refresh(result)
         return _result_to_response(db, district, result, "manual_override")
-    cached = _get_cached_result(db, district.id, target_date)
-    if cached:
-        return _result_to_response(db, district, cached, "inferred")
+    if not payload.force_refresh:
+        cached = _get_cached_result(db, district.id, target_date)
+        if cached:
+            return _result_to_response(db, district, cached, "inferred")
     return _build_fresh_result(db, district, target_date)
 
 
@@ -341,6 +342,9 @@ def reparse_sources(db: Session, payload) -> dict:
             reparsed += 1
         except Exception:
             continue
+    if payload.district_id:
+        db.execute(delete(InferenceResult).where(InferenceResult.district_id == payload.district_id))
+        db.commit()
     return {"reparsed_sources": reparsed}
 
 

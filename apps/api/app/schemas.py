@@ -13,6 +13,7 @@ ConfidenceLevel = Literal["high", "medium", "low"]
 class CheckRequest(BaseModel):
     district_url: str = Field(..., examples=["https://www.examplek12.org"])
     target_date: date | None = None
+    force_refresh: bool = False
 
 
 class DistrictSummary(BaseModel):
@@ -104,4 +105,3 @@ class AdminResultSummary(BaseModel):
     explanation: str
     generated_at: datetime
     has_conflict: bool
-

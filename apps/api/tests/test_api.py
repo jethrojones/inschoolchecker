@@ -65,3 +65,17 @@ def test_reparse_endpoint_accepts_district_id(client, seeded_district):
     response = client.post("/api/admin/reparse", json={"district_id": seeded_district.id})
     assert response.status_code == 200
     assert "reparsed_sources" in response.json()
+
+
+def test_force_refresh_bypasses_cached_result(client, seeded_district):
+    response = client.post(
+        "/api/check",
+        json={
+            "district_url": seeded_district.homepage_url,
+            "target_date": "2026-03-27",
+            "force_refresh": True,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["last_checked"] != "2026-03-28T06:06:25"

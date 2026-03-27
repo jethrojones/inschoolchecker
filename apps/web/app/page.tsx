@@ -25,7 +25,7 @@ export default function HomePage() {
         const response = await fetch(`${apiBaseUrl}/api/check`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ district_url: districtUrl, target_date: targetDate }),
+          body: JSON.stringify({ district_url: districtUrl, target_date: targetDate, force_refresh: true }),
         });
         if (!response.ok) {
           throw new Error(`Request failed with ${response.status}`);
@@ -78,7 +78,7 @@ export default function HomePage() {
               disabled={isPending}
               type="submit"
             >
-              {isPending ? "Checking..." : "Check district status"}
+              {isPending ? "Checking live sources..." : "Check district status"}
             </button>
             <p className="text-sm text-slate-500">Supported sources: homepage alerts, news pages, public calendar pages, and public PDF calendars.</p>
           </form>
