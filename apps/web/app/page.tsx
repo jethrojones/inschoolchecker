@@ -92,6 +92,15 @@ export default function HomePage() {
         </section>
       ) : null}
 
+      {isPending ? (
+        <section className="paper rounded-[2rem] border border-amber-200 p-6 text-slate-900">
+          <h2 className="text-lg font-semibold">Checking district sources...</h2>
+          <p className="mt-2 text-sm text-slate-700">
+            The app is fetching the district homepage, looking for calendar or alert sources, and building the best current result.
+          </p>
+        </section>
+      ) : null}
+
       {result ? (
         <>
           <ResultCard result={result} />
@@ -105,4 +114,3 @@ export default function HomePage() {
     </main>
   );
 }
-

@@ -3,9 +3,13 @@ import { CheckResponse } from "@inschoolchecker/shared-types";
 import { StatusBadge } from "./status-badge";
 
 export function ResultCard({ result }: { result: CheckResponse }) {
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
+  const timestamp = new Date(result.last_checked);
+  const dateTime = timestamp.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
     timeZoneName: "short",
   });
 
@@ -30,7 +34,7 @@ export function ResultCard({ result }: { result: CheckResponse }) {
           </div>
           <div>
             <dt className="text-slate-500">Last checked</dt>
-            <dd className="font-medium">{formatter.format(new Date(result.last_checked))}</dd>
+            <dd className="font-medium">{dateTime}</dd>
           </div>
           <div>
             <dt className="text-slate-500">Domain</dt>
