@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const isGithubPages = process.env.GITHUB_ACTIONS === "true";
-const repoName = "inschoolchecker";
+const rawBasePath = process.env.PAGES_BASE_PATH?.trim();
+const pagesBasePath = rawBasePath
+  ? rawBasePath.startsWith("/")
+    ? rawBasePath.replace(/\/+$/, "")
+    : `/${rawBasePath.replace(/\/+$/, "")}`
+  : "";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -13,10 +18,10 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   trailingSlash: true,
-  ...(isGithubPages
+  ...(isGithubPages && pagesBasePath
     ? {
-        basePath: `/${repoName}`,
-        assetPrefix: `/${repoName}/`,
+        basePath: pagesBasePath,
+        assetPrefix: `${pagesBasePath}/`,
       }
     : {}),
 };
