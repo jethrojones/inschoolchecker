@@ -1,19 +1,46 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { AdminResultSummary } from "@inschoolchecker/shared-types";
 
 import { StatusBadge } from "@/components/status-badge";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-async function getAdminResults(): Promise<AdminResultSummary[]> {
-  const response = await fetch(`${apiBaseUrl}/api/admin/results`, { cache: "no-store" });
-  if (!response.ok) {
-    return [];
-  }
-  return (await response.json()) as AdminResultSummary[];
-}
+export default function AdminPage() {
+  const [results, setResults] = useState<AdminResultSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default async function AdminPage() {
-  const results = await getAdminResults();
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/admin/results`);
+        if (!response.ok) {
+          throw new Error(`Request failed with ${response.status}`);
+        }
+        const payload = (await response.json()) as AdminResultSummary[];
+        if (!cancelled) {
+          setResults(payload);
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(loadError instanceof Error ? loadError.message : "Unknown error");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="grid gap-6">
@@ -23,7 +50,11 @@ export default async function AdminPage() {
       </section>
 
       <section className="paper rounded-[2rem] p-6">
-        {results.length === 0 ? (
+        {loading ? (
+          <p className="text-sm text-slate-600">Loading admin results...</p>
+        ) : error ? (
+          <p className="text-sm text-rose-700">{error}</p>
+        ) : results.length === 0 ? (
           <p className="text-sm text-slate-600">No inference results are available yet.</p>
         ) : (
           <div className="grid gap-4">
@@ -54,4 +85,3 @@ export default async function AdminPage() {
     </main>
   );
 }
-

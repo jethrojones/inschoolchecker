@@ -1,13 +1,25 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes import router
+from app.core.config import get_settings
 from app.db import Base, engine
 from app.services.url_safety import UnsafeURLError
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="District Status Checker API", version="0.1.0")
+settings = get_settings()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in settings.cors_allowed_origins.split(",") if origin.strip()],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 app.include_router(router)
 
 

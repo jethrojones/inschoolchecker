@@ -47,3 +47,15 @@ def test_admin_results_lists_cached_inference(client, seeded_district):
 def test_invalid_url_returns_400(client):
     response = client.post("/api/check", json={"district_url": "ftp://bad.example", "target_date": "2026-03-27"})
     assert response.status_code == 400
+
+
+def test_cors_preflight_allows_frontend_origin(client):
+    response = client.options(
+        "/api/check",
+        headers={
+            "Origin": "https://jethrojones.github.io",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "https://jethrojones.github.io"

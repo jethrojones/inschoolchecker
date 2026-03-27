@@ -20,6 +20,7 @@ class Settings:
     max_crawl_depth: int
     fetch_timeout_seconds: int
     snapshot_dir: str
+    cors_allowed_origins: str
 
     @property
     def snapshot_path(self) -> Path:
@@ -43,4 +44,5 @@ def get_settings() -> Settings:
         max_crawl_depth=int(os.getenv("MAX_CRAWL_DEPTH", "2")),
         fetch_timeout_seconds=int(os.getenv("FETCH_TIMEOUT_SECONDS", "10")),
         snapshot_dir=os.getenv("SNAPSHOT_DIR", "apps/api/data/snapshots"),
+        cors_allowed_origins=os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,https://jethrojones.github.io"),
     )
