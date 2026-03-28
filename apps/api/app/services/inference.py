@@ -116,6 +116,12 @@ def infer_status(
 
     exact_matches = [item for item in ranked if item.evidence_type == "calendar_exact_match"]
     if exact_matches:
+        usable_matches = [item for item in exact_matches if item.event.status_effect in {"out_of_school", "delayed_or_modified"}]
+        if not usable_matches:
+            exact_matches = []
+        else:
+            exact_matches = usable_matches
+    if exact_matches:
         statuses = {item.event.status_effect for item in exact_matches}
         if len(statuses) > 1:
             top = exact_matches[:2]

@@ -72,3 +72,19 @@ def test_official_calendar_presence_can_support_in_school_when_no_closure_matche
     decision = infer_status(date(2026, 3, 27), None, [], has_calendar_coverage=True, calendar_sources=[source])
     assert decision.status == "in_school"
     assert decision.confidence_level == "medium"
+
+
+def test_unknown_calendar_match_does_not_become_modified_schedule():
+    source = make_source("calendar_page")
+    document = make_document()
+    event = make_event("unknown")
+    event.label_raw = "26"
+    evidence = [classify_evidence(source, document, event, date(2026, 3, 27))]
+    decision = infer_status(
+        date(2026, 3, 27),
+        None,
+        [item for item in evidence if item],
+        has_calendar_coverage=True,
+        calendar_sources=[source],
+    )
+    assert decision.status == "in_school"

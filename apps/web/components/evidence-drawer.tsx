@@ -6,7 +6,7 @@ export function EvidenceDrawer({ result }: { result: CheckResponse }) {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Evidence</h2>
-          <p className="text-sm text-slate-600">Receipts, not vibes.</p>
+          <p className="text-sm text-slate-600">Here are the receipts. I can still make mistakes, but this is still faster than digging through six terrible PDFs yourself.</p>
         </div>
       </div>
 
